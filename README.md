@@ -2,7 +2,7 @@
 
 A hostel management prototype that replaces paper outpass registers with an online workflow.
 
-**Live demo:** add your GitHub Pages link here
+**Live demo:** https://srikaran790.github.io/hostelos-/
 
 ## What it does
 - **Student:** requests an outpass, sees a one-time code once approved, raises complaints.
