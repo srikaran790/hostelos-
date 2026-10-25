@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HostelOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F6;--card:#fff;--ink:#16233F;--mute:#5E6B85;--line:#D6DCE8;--navy:#1B2A49;--acc:#E08A1E;--red:#B3261E;--green:#1E7B3E;--blue:#2457B8;--on:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1424;--card:#172038;--ink:#E7ECF7;--mute:#9AA7C4;--line:#27324F;--navy:#7F9CE8;--acc:#F2A545;--red:#FF8A80;--green:#6FD08C;--blue:#8FB0FF;--on:#0E1424}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Work Sans",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:14px 14px 50px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+header h1{font-size:24px;margin:0;line-height:1.1}
+header small{display:block;color:var(--mute);font-size:13px}
+.roles{display:flex;gap:6px;margin-bottom:12px}
+.roles button{flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.roles button[aria-selected=true]{background:var(--navy);color:var(--on);border-color:var(--navy)}
+h2{font-size:18px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+button,select,textarea,input{font:inherit;color:inherit}
+button{background:var(--navy);color:var(--on);border:0;border-radius:9px;padding:9px 14px;font-weight:600;cursor:pointer;min-height:42px}
+button.alt{background:transparent;color:var(--navy);border:2px solid var(--navy)}
+button.ok{background:var(--green);color:#fff}button.no{background:var(--red);color:#fff}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+label{display:block;font-size:14px;color:var(--mute);margin-top:10px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px}
+textarea{min-height:70px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:26px;line-height:1.1}
+.stat span{font-size:12px;color:var(--mute)}
+.item{border-left:5px solid var(--line);padding:6px 0 6px 12px;margin:10px 0}
+.item.pending{border-color:var(--acc)}.item.approved{border-color:var(--blue)}.item.out{border-color:var(--navy)}
+.item.returned{border-color:var(--green)}.item.rejected,.item.overdue{border-color:var(--red)}
+.top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--line);color:var(--ink)}
+.tag.pending{background:var(--acc);color:#16233F}.tag.approved{background:var(--blue);color:#fff}.tag.out{background:var(--navy);color:var(--on)}
+.tag.returned{background:var(--green);color:#fff}.tag.rejected,.tag.overdue{background:var(--red);color:#fff}
+.m{color:var(--mute);font-size:14px}
+.otp{display:inline-block;font-size:34px;font-weight:700;letter-spacing:6px;color:var(--navy);background:var(--bg);border:2px dashed var(--navy);border-radius:10px;padding:4px 14px;margin:6px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.res{border-radius:10px;padding:12px;margin-top:10px;font-weight:600}
+.res.g{background:var(--green);color:#fff}.res.r{background:var(--red);color:#fff}.res.w{background:var(--acc);color:#16233F}
+.log{font-size:14px;padding:5px 0;border-bottom:1px solid var(--line)}
+.foot{color:var(--mute);font-size:13px;margin-top:16px}
+@media(max-width:460px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<svg width="42" height="42" viewBox="0 0 42 42" aria-hidden="true"><path d="M5 20L21 6l16 14v16H5z" fill="#1B2A49"/><rect x="16" y="22" width="10" height="14" rx="1" fill="#E08A1E"/><circle cx="24" cy="29" r="1.2" fill="#1B2A49"/></svg>
+<div><h1>HostelOS</h1><small>Outpass, entry log and complaints for hostels</small></div>
+</header>
+<div class="roles" role="tablist">
+<button role="tab" data-r="student">Student</button><button role="tab" data-r="warden">Warden</button><button role="tab" data-r="guard">Guard</button>
+</div>
+<div id="app"></div>
+<p class="foot">Exit and return times are recorded with a one-time code at the gate. HostelOS does not track live location.</p>
+<div class="row"><button class="alt" id="reset">Reset demo data</button></div>
+</main>
+<script>
+var $=function(i){return document.getElementById(i)};
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function seed(){return{students:[{id:"s1",name:"Arun K",room:"B-204"},{id:"s2",name:"Karthik S",room:"B-118"},{id:"s3",name:"Divya M",room:"G-305"},{id:"s4",name:"Meena R",room:"G-112"},{id:"s5",name:"Vignesh P",room:"B-310"}],passes:[],complaints:[],log:[]}}
+var S=seed(),role="student",me="s1",guardMsg=null,toast=null;
+try{var raw=localStorage.getItem("hostelos1");if(raw)S=JSON.parse(raw)}catch(e){}
+function save(){try{localStorage.setItem("hostelos1",JSON.stringify(S))}catch(e){}}
+function now(){return Date.now()}
+function f(t){return new Date(t).toLocaleString([],{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
+function logit(m){S.log.unshift({t:now(),m:m});S.log=S.log.slice(0,40);save()}
+function nm(id){return S.students.filter(function(s){return s.id==id})[0]}
+function otp(){return String(Math.floor(100000+Math.random()*900000))}
+function isLate(p){return p.status=="out"&&now()>p.back}
+function stOf(p){return isLate(p)?"overdue":p.status}
+function localVal(ms){var d=new Date(ms-new Date().getTimezoneOffset()*60000);return d.toISOString().slice(0,16)}
+
+document.querySelectorAll(".roles button").forEach(function(b){b.onclick=function(){role=b.dataset.r;guardMsg=null;render()}});
+$("reset").onclick=function(){if(confirm("Delete all passes, complaints and logs?")){S=seed();save();guardMsg=null;render()}};
+
+function field(parent,lab,node){var l=el("label",null,lab);parent.appendChild(l);parent.appendChild(node);return node}
+function tag(s){return el("span","tag "+s,s)}
+
+function passCard(p,showWho,actions){
+  var st=stOf(p),d=el("div","item "+st),top=el("div","top");
+  var l=el("div");l.appendChild(el("b",null,(showWho?nm(p.sid).name+" ("+nm(p.sid).room+") · ":"")+p.reason));
+  l.appendChild(el("div","m","To "+p.dest+" · leave "+f(p.out)+" · back by "+f(p.back)));
+  if(p.outAt)l.appendChild(el("div","m","Left gate: "+f(p.outAt)));
+  if(p.inAt)l.appendChild(el("div","m","Returned: "+f(p.inAt)+(p.late?" (late)":"")));
+  top.appendChild(l);top.appendChild(tag(st));d.appendChild(top);
+  if(actions)actions(d,p);
+  return d;
+}
+
+/* student */
+function student(a){
+  var sel=el("select");S.students.forEach(function(s){var o=el("option",null,s.name+" · Room "+s.room);o.value=s.id;if(s.id==me)o.selected=true;sel.appendChild(o)});
+  sel.onchange=function(){me=sel.value;render()};
+  var c0=el("div","card");c0.appendChild(el("h2",null,"Signed in as"));c0.appendChild(sel);a.appendChild(c0);
+
+  var c=el("div","card");c.appendChild(el("h2",null,"Request an outpass"));
+  var reason=field(c,"Reason",el("input"));reason.placeholder="Home visit, medical, shopping";
+  var dest=field(c,"Going to",el("input"));dest.placeholder="Place";
+  var g=el("div","grid");c.appendChild(g);
+  var g1=el("div"),g2=el("div");g.appendChild(g1);g.appendChild(g2);
+  var o=field(g1,"Leaving",el("input"));o.type="datetime-local";o.value=localVal(now()+600000);
+  var b=field(g2,"Back by",el("input"));b.type="datetime-local";b.value=localVal(now()+4*3600000);
+  var err=el("div","m");err.style.color="var(--red)";c.appendChild(err);
+  var go=el("button",null,"Send for approval");go.style.marginTop="12px";go.style.width="100%";
+  go.onclick=function(){
+    var oo=new Date(o.value).getTime(),bb=new Date(b.value).getTime();
+    if(!reason.value.trim()||!dest.value.trim()){err.textContent="Enter a reason and a destination.";return}
+    if(!(bb>oo)){err.textContent="Return time must be after the leaving time.";return}
+    S.passes.unshift({id:"p"+now(),sid:me,reason:reason.value.trim(),dest:dest.value.trim(),out:oo,back:bb,status:"pending",otp:null,created:now()});
+    logit(nm(me).name+" requested an outpass to "+dest.value.trim());save();render();
+  };
+  c.appendChild(go);a.appendChild(c);
+
+  var c2=el("div","card");c2.appendChild(el("h2",null,"My outpasses"));
+  var mine=S.passes.filter(function(p){return p.sid==me});
+  if(!mine.length)c2.appendChild(el("p","m","No outpasses yet."));
+  mine.forEach(function(p){c2.appendChild(passCard(p,false,function(d){
+    if(p.status=="approved"){d.appendChild(el("div","m","Show this code to the guard when leaving:"));d.appendChild(el("div","otp",p.otp))}
+    if(p.status=="out"){d.appendChild(el("div","m","Show this code to the guard when you return:"));d.appendChild(el("div","otp",p.otp))}
+  }))});
+  a.appendChild(c2);
+
+  var c3=el("div","card");c3.appendChild(el("h2",null,"Raise a complaint"));
+  var cat=field(c3,"Category",el("select"));["Maintenance","Electrical","Water","Mess food","Cleanliness","Other"].forEach(function(x){cat.appendChild(el("option",null,x))});
+  var tx=field(c3,"What is the problem?",el("textarea"));
+  var cb=el("button",null,"Submit complaint");cb.style.marginTop="12px";
+  cb.onclick=function(){if(!tx.value.trim())return;S.complaints.unshift({id:"c"+now(),sid:me,cat:cat.value,text:tx.value.trim(),status:"open",created:now()});logit(nm(me).name+" raised a "+cat.value+" complaint");save();render()};
+  c3.appendChild(cb);
+  var mc=S.complaints.filter(function(x){return x.sid==me});
+  mc.forEach(function(x){var d=el("div","item "+(x.status=="resolved"?"returned":x.status=="open"?"pending":"approved")),t=el("div","top");
+    var l=el("div");l.appendChild(el("b",null,x.cat));l.appendChild(el("div","m",x.text+" · "+f(x.created)));t.appendChild(l);t.appendChild(el("span","tag "+(x.status=="resolved"?"returned":x.status=="open"?"pending":"approved"),x.status));d.appendChild(t);c3.appendChild(d)});
+  a.appendChild(c3);
+}
+
+/* warden */
+function warden(a){
+  var outs=S.passes.filter(function(p){return p.status=="out"}),pend=S.passes.filter(function(p){return p.status=="pending"});
+  var late=outs.filter(isLate).length;
+  var st=el("div","stats");
+  [[S.students.length-outs.length,"Inside"],[outs.length,"Outside"],[pend.length,"Pending"],[late,"Overdue"]].forEach(function(x){var d=el("div","stat");d.appendChild(el("b",null,x[0]));d.appendChild(el("span",null,x[1]));st.appendChild(d)});
+  a.appendChild(st);
+
+  var c=el("div","card");c.appendChild(el("h2",null,"Pending approvals"));
+  if(!pend.length)c.appendChild(el("p","m","Nothing waiting."));
+  pend.forEach(function(p){c.appendChild(passCard(p,true,function(d){
+    var r=el("div","row"),ok=el("button","ok","Approve"),no=el("button","no","Reject");
+    ok.onclick=function(){p.status="approved";p.otp=otp();logit("Warden approved "+nm(p.sid).name+"'s outpass");save();render()};
+    no.onclick=function(){p.status="rejected";logit("Warden rejected "+nm(p.sid).name+"'s outpass");save();render()};
+    r.appendChild(ok);r.appendChild(no);d.appendChild(r)}))});
+  a.appendChild(c);
+
+  var c2=el("div","card");c2.appendChild(el("h2",null,"Outside the hostel now"));
+  if(!outs.length)c2.appendChild(el("p","m","Everyone is inside."));
+  outs.forEach(function(p){c2.appendChild(passCard(p,true))});
+  a.appendChild(c2);
+
+  var c3=el("div","card");c3.appendChild(el("h2",null,"Complaints"));
+  if(!S.complaints.length)c3.appendChild(el("p","m","No complaints."));
+  S.complaints.forEach(function(x){
+    var d=el("div","item "+(x.status=="resolved"?"returned":x.status=="open"?"pending":"approved")),t=el("div","top"),l=el("div");
+    l.appendChild(el("b",null,x.cat+" · "+nm(x.sid).name+" ("+nm(x.sid).room+")"));l.appendChild(el("div","m",x.text));
+    t.appendChild(l);
+    var s=el("select");s.style.width="auto";["open","in progress","resolved"].forEach(function(v){var o=el("option",null,v);if(v==x.status)o.selected=true;s.appendChild(o)});
+    s.onchange=function(){x.status=s.value;logit("Complaint ("+x.cat+") marked "+s.value);save();render()};
+    t.appendChild(s);d.appendChild(t);c3.appendChild(d)});
+  a.appendChild(c3);
+
+  var c4=el("div","card");c4.appendChild(el("h2",null,"Activity log"));
+  if(!S.log.length)c4.appendChild(el("p","m","No activity yet."));
+  S.log.slice(0,12).forEach(function(x){c4.appendChild(el("div","log",f(x.t)+" · "+x.m))});
+  a.appendChild(c4);
+}
+
+/* guard */
+function guard(a){
+  var c=el("div","card");c.appendChild(el("h2",null,"Gate check"));
+  c.appendChild(el("p","m","Ask the student for the 6-digit code from their outpass."));
+  var i=el("input");i.inputMode="numeric";i.maxLength=6;i.placeholder="000000";i.style.fontSize="26px";i.style.letterSpacing="6px";i.style.textAlign="center";
+  c.appendChild(i);
+  var b=el("button",null,"Verify code");b.style.cssText="width:100%;margin-top:10px";
+  b.onclick=function(){
+    var code=i.value.trim();
+    var p=S.passes.filter(function(x){return(x.status=="approved"||x.status=="out")&&x.otp==code})[0];
+    if(!code||!p){guardMsg={c:"r",t:"Invalid or already used code. Do not let the student pass."};render();return}
+    var w=nm(p.sid);
+    if(p.status=="approved"){
+      p.status="out";p.outAt=now();p.otp=otp();logit(w.name+" left the hostel");
+      guardMsg={c:"g",t:"EXIT recorded: "+w.name+", Room "+w.room+" at "+f(p.outAt)+". Due back by "+f(p.back)+"."};
+    }else{
+      p.inAt=now();p.late=p.inAt>p.back;p.status="returned";p.otp=null;logit(w.name+" returned"+(p.late?" late":""));
+      guardMsg={c:p.late?"w":"g",t:"RETURN recorded: "+w.name+", Room "+w.room+" at "+f(p.inAt)+(p.late?". LATE, was due "+f(p.back)+".":". On time.")};
+    }
+    save();render();
+  };
+  c.appendChild(b);
+  if(guardMsg)c.appendChild(el("div","res "+guardMsg.c,guardMsg.t));
+  a.appendChild(c);
+  var c2=el("div","card");c2.appendChild(el("h2",null,"Students currently outside"));
+  var outs=S.passes.filter(function(p){return p.status=="out"});
+  if(!outs.length)c2.appendChild(el("p","m","Everyone is inside."));
+  outs.forEach(function(p){c2.appendChild(passCard(p,true))});
+  a.appendChild(c2);
+}
+
+function render(){
+  document.querySelectorAll(".roles button").forEach(function(b){b.setAttribute("aria-selected",b.dataset.r==role)});
+  var a=$("app");a.textContent="";
+  if(role=="student")student(a);else if(role=="warden")warden(a);else guard(a);
+}
+render();
+setInterval(function(){if(role!="student"&&document.activeElement.tagName!="INPUT"&&document.activeElement.tagName!="SELECT")render()},30000);
+</script>
+</body>
+</html>
